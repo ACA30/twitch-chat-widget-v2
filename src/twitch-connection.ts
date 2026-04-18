@@ -101,9 +101,7 @@ export class TwitchConnection {
       case "PRIVMSG": {
         const msg = buildMessage(parsed);
         if (this.commandCallback) {
-          const isPrivileged = msg.sender.badges.some(
-            (b) => b.id === "broadcaster" || b.id === "moderator",
-          );
+          const isPrivileged = msg.sender.broadcaster || msg.sender.mod;
           if (isPrivileged) {
             const text = msg.content.text.trim().toLowerCase() as ChatCommand;
             if ((CHAT_COMMANDS as readonly string[]).includes(text)) {
