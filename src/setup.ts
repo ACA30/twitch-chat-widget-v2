@@ -15,6 +15,7 @@ export class SetupElement extends LitElement {
   @state() private seventvPaints = false;
   @state() private hideBots = false;
   @state() private chatCommandsEnabled = true;
+  @state() private highlightMods = true;
   @state() private fetchStatus: FetchStatus = "idle";
   @state() private fetchError = "";
   @state() private copied = false;
@@ -410,6 +411,7 @@ export class SetupElement extends LitElement {
     if (this.seventvPaints) params.set("seventv_paints", "1");
     if (this.hideBots) params.set("bots", "0");
     if (!this.chatCommandsEnabled) params.set("commands", "0");
+    if (!this.highlightMods) params.set("highlight_mods", "0");
 
     const qs = params.toString();
     return qs ? `${base}?${qs}` : base;
@@ -672,6 +674,24 @@ export class SetupElement extends LitElement {
               <span>${this.chatCommandsEnabled ? "Enabled" : "Disabled"}</span>
             </div>
             <p class="hint-text">Allows the broadcaster and moderators to control the overlay via chat. See the command reference below.</p>
+          </div>
+
+          <div class="field">
+            <label>Highlight mod/broadcaster messages</label>
+            <div class="toggle-row">
+              <label class="toggle">
+                <input
+                  type="checkbox"
+                  .checked=${this.highlightMods}
+                  @change=${(e: Event) => {
+                    this.highlightMods = (e.target as HTMLInputElement).checked;
+                  }}
+                />
+                <span class="slider"></span>
+              </label>
+              <span>${this.highlightMods ? "Enabled" : "Disabled"}</span>
+            </div>
+            <p class="hint-text">Adds a subtle green gradient and icon to moderator messages, and red for the broadcaster.</p>
           </div>
         </div>
 
