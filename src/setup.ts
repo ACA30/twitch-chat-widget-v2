@@ -14,6 +14,7 @@ export class SetupElement extends LitElement {
   @state() private seventvLive = false;
   @state() private seventvPaints = false;
   @state() private hideBots = false;
+  @state() private chatCommandsEnabled = true;
   @state() private fetchStatus: FetchStatus = "idle";
   @state() private fetchError = "";
   @state() private copied = false;
@@ -275,6 +276,35 @@ export class SetupElement extends LitElement {
       font-size: 13px;
     }
 
+    .cmd-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .cmd-row {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+    }
+
+    .cmd-name {
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      color: #a970ff;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .cmd-desc {
+      font-size: 13px;
+      color: #adadb8;
+      line-height: 1.4;
+    }
+
     .url-card {
       border-color: #2d2d35;
     }
@@ -379,6 +409,7 @@ export class SetupElement extends LitElement {
     if (this.seventvLive) params.set("seventv_live", "1");
     if (this.seventvPaints) params.set("seventv_paints", "1");
     if (this.hideBots) params.set("bots", "0");
+    if (!this.chatCommandsEnabled) params.set("commands", "0");
 
     const qs = params.toString();
     return qs ? `${base}?${qs}` : base;
@@ -624,6 +655,47 @@ export class SetupElement extends LitElement {
             </div>
             <p class="hint-text">Fetches and renders 7TV namepaints on chatter names. Fires up to two requests per unique chatter, cached for the session.</p>
           </div>
+
+          <div class="field">
+            <label>Broadcaster/mod commands</label>
+            <div class="toggle-row">
+              <label class="toggle">
+                <input
+                  type="checkbox"
+                  .checked=${this.chatCommandsEnabled}
+                  @change=${(e: Event) => {
+                    this.chatCommandsEnabled = (e.target as HTMLInputElement).checked;
+                  }}
+                />
+                <span class="slider"></span>
+              </label>
+              <span>${this.chatCommandsEnabled ? "Enabled" : "Disabled"}</span>
+            </div>
+            <p class="hint-text">Allows the broadcaster and moderators to control the overlay via chat. See the command reference below.</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Chat Commands</h2>
+          <ul class="cmd-list">
+            <li class="cmd-row">
+              <span class="cmd-name">!reloadchat</span>
+              <span class="cmd-desc">Reloads the overlay page.</span>
+            </li>
+            <li class="cmd-row">
+              <span class="cmd-name">!refreshchat</span>
+              <span class="cmd-desc">Alias for <code>!reloadchat</code>.</span>
+            </li>
+            <li class="cmd-row">
+              <span class="cmd-name">!reloadws</span>
+              <span class="cmd-desc">Re-fetches all emote and badge data and reconnects the 7TV EventSource.</span>
+            </li>
+            <li class="cmd-row">
+              <span class="cmd-name">!reconnectchat</span>
+              <span class="cmd-desc">Reconnects the Twitch IRC WebSocket.</span>
+            </li>
+          </ul>
+          <p class="hint-text" style="margin-top:14px">Only the broadcaster and moderators can trigger these. A subtle checkmark appears on the command message when it is acknowledged.</p>
         </div>
 
         <div class="card url-card">

@@ -61,6 +61,9 @@ export class MessageElement extends LitElement {
   @property()
   message?: FragmentedChatMessage;
 
+  @property({ type: Boolean })
+  commandAck = false;
+
   @state()
   private paint: PaintStyle | null = null;
 
@@ -124,6 +127,10 @@ export class MessageElement extends LitElement {
         margin-bottom: -4px;
       }
 
+      .message {
+        position: relative;
+      }
+
       .name {
         font-weight: 500;
         padding-right: 3px;
@@ -142,6 +149,22 @@ export class MessageElement extends LitElement {
         to {
           opacity: 0;
         }
+      }
+
+      @keyframes cmd-ack {
+        from { opacity: 0; transform: translateY(-50%) scale(0.6); }
+        to   { opacity: 0.45; transform: translateY(-50%) scale(1); }
+      }
+
+      .cmd-ack {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        pointer-events: none;
+        animation: cmd-ack 0.2s ease forwards;
+        opacity: 0;
+        line-height: 1;
       }
     `,
     themes[theme],
@@ -190,6 +213,13 @@ export class MessageElement extends LitElement {
           <span class="${classMap({ content: true, italic: this.message.content.action })}"
             >${map(this.message.content.fragments, renderFragment)}</span
           >
+          ${this.commandAck
+            ? html`<span class="cmd-ack" aria-hidden="true">
+                <svg width="11" height="9" viewBox="0 0 11 9" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M1 4.5L4 7.5L10 1" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>`
+            : null}
         </div>
       </div>
     `;
