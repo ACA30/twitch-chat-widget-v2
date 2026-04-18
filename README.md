@@ -65,5 +65,4 @@ Feature ideas not yet implemented:
 
 - **7TV personal/special emote sets** — sets assigned to individual chatters rather than the channel
 - **7TV badges** — cosmetic badges granted to 7TV subscribers/staff
-- ~~**BTTV live emote-set updates**~~ — implemented (`?bttv_live=1`)
 - **FFZ badges** — global and channel-level FFZ badge support
