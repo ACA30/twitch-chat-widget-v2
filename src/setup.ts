@@ -50,7 +50,6 @@ export class SetupElement extends LitElement {
     .header svg {
       width: 40px;
       height: 40px;
-      fill: #9147ff;
       margin-bottom: 12px;
     }
 
@@ -494,9 +493,11 @@ export class SetupElement extends LitElement {
     return html`
       <div class="container">
         <div class="header">
-          <svg viewBox="0 0 24 28" xmlns="http://www.w3.org/2000/svg">
-            <path d="M2 0L0 4v20h6v4l4-4h4l8-8V0H2zm18 14l-4 4h-4l-4 4v-4H4V2h16v12z"/>
-            <path d="M18 6h-2v6h2V6zM13 6h-2v6h2V6z"/>
+          <svg viewBox="0 0 2400 2800" xmlns="http://www.w3.org/2000/svg" aria-label="Twitch" role="img">
+            <polygon fill="#ffffff" points="2200,1300 1800,1700 1400,1700 1050,2050 1050,1700 600,1700 600,200 2200,200"/>
+            <path fill="#9146ff" d="M500,0L0,500v1800h600v500l500-500h400l900-900V0H500z M2200,1300l-400,400h-400l-350,350v-350H600V200h1600V1300z"/>
+            <rect fill="#9146ff" x="1700" y="550" width="200" height="600"/>
+            <rect fill="#9146ff" x="1150" y="550" width="200" height="600"/>
           </svg>
           <h1>Twitch Chat Widget</h1>
           <p>Generate a browser source URL for OBS or other streaming software.</p>
