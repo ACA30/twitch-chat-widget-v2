@@ -12,6 +12,7 @@ export class SetupElement extends LitElement {
   @state() private fadeoutEnabled = true;
   @state() private fadeoutSeconds = "15";
   @state() private seventvLive = false;
+  @state() private seventvPaints = false;
   @state() private fetchStatus: FetchStatus = "idle";
   @state() private fetchError = "";
   @state() private copied = false;
@@ -375,6 +376,7 @@ export class SetupElement extends LitElement {
     }
 
     if (this.seventvLive) params.set("seventv_live", "1");
+    if (this.seventvPaints) params.set("seventv_paints", "1");
 
     const qs = params.toString();
     return qs ? `${base}?${qs}` : base;
@@ -583,6 +585,24 @@ export class SetupElement extends LitElement {
               <span>${this.seventvLive ? "Enabled" : "Disabled"}</span>
             </div>
             <p class="hint-text">Subscribes to 7TV SSE for real-time emote set changes. Uses an extra persistent connection.</p>
+          </div>
+
+          <div class="field">
+            <label>7TV namepaints</label>
+            <div class="toggle-row">
+              <label class="toggle">
+                <input
+                  type="checkbox"
+                  .checked=${this.seventvPaints}
+                  @change=${(e: Event) => {
+                    this.seventvPaints = (e.target as HTMLInputElement).checked;
+                  }}
+                />
+                <span class="slider"></span>
+              </label>
+              <span>${this.seventvPaints ? "Enabled" : "Disabled"}</span>
+            </div>
+            <p class="hint-text">Fetches and renders 7TV namepaints on chatter names. Fires up to two requests per unique chatter, cached for the session.</p>
           </div>
         </div>
 

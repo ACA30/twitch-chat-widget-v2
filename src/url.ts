@@ -45,14 +45,22 @@ export function isEmoteOnly() {
   return theme === "emote_dark";
 }
 
+/** When true, fetch and display 7TV namepaints for chatters (one REST + one GQL call per unique chatter, cached). */
+export const seventvPaints = resolveBoolParam("seventv_paints");
+
 /** When true, subscribe to 7TV emote-set SSE for live emote add/remove updates (extra connection + traffic). */
 export const seventvLiveUpdates = resolveSeventvLiveUpdates();
-function resolveSeventvLiveUpdates() {
-  const raw = params.get("seventv_live") ?? params.get("7tv_live");
-  if (!raw) {
-    return false;
+function resolveBoolParam(...keys: string[]) {
+  for (const key of keys) {
+    const raw = params.get(key);
+    if (raw !== null) {
+      const v = raw.toLowerCase();
+      return v === "1" || v === "true" || v === "yes" || v === "on";
+    }
   }
+  return false;
+}
 
-  const v = raw.toLowerCase();
-  return v === "1" || v === "true" || v === "yes" || v === "on";
+function resolveSeventvLiveUpdates() {
+  return resolveBoolParam("seventv_live", "7tv_live");
 }
