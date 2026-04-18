@@ -5,7 +5,7 @@ import { DelayedQueue } from "./delayed-queue";
 import { ImageFragment } from "./fragment";
 import "./message";
 import { FragmentedChatMessage, TwitchConnection } from "./twitch-connection";
-import { isEmoteOnly } from "./url";
+import { hideBots, isEmoteOnly } from "./url";
 
 const MAX_BUFFER = 100;
 
@@ -56,8 +56,10 @@ export class MessagesElement extends LitElement {
 
     // we delay message appearances to allow for fossabot to time things out
     this.connection.onMessage((message) => {
+      if (hideBots && message.sender.badges.some((b) => b.id === "bot-badge")) {
+        return;
+      }
       if (isEmoteOnly() && !this.shouldIncludeMessageInEmoteOnly(message)) {
-        // if it's the emote only theme, only render messages that contain an emote.
         return;
       }
       this.delayedQueue.push(message);
