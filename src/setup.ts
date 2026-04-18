@@ -712,6 +712,14 @@ export class SetupElement extends LitElement {
               <span class="cmd-name">!reconnectchat</span>
               <span class="cmd-desc">Reconnects the Twitch IRC WebSocket.</span>
             </li>
+            <li class="cmd-row">
+              <span class="cmd-name">!hidechat</span>
+              <span class="cmd-desc">Hides the chat overlay until a moderator or broadcaster sends <code>!showchat</code>.</span>
+            </li>
+            <li class="cmd-row">
+              <span class="cmd-name">!showchat</span>
+              <span class="cmd-desc">Shows the chat overlay again after <code>!hidechat</code>.</span>
+            </li>
           </ul>
           <p class="hint-text" style="margin-top:14px">Only the broadcaster and moderators can trigger these. A subtle checkmark appears on the command message when it is acknowledged.</p>
         </div>` : null}

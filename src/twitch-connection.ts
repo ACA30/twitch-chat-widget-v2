@@ -4,7 +4,7 @@ import { FragmentGenerationFactory } from "./fragment";
 export type ChatMessage = ReturnType<typeof buildMessage>;
 export type FragmentedChatMessage = ReturnType<typeof extendMessageWithFragments>;
 
-export const CHAT_COMMANDS = ["!reloadchat", "!reloadws", "!reconnectchat"] as const;
+export const CHAT_COMMANDS = ["!reloadchat", "!reloadws", "!reconnectchat", "!hidechat", "!showchat"] as const;
 export type ChatCommand = (typeof CHAT_COMMANDS)[number];
 
 enum ConnectionState {

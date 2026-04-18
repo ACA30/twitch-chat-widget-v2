@@ -49,6 +49,8 @@ The broadcaster and moderators can send the following commands in chat to contro
 | `!reloadchat` | Reloads the overlay page |
 | `!reloadws` | Re-fetches all emote/badge data and reconnects the 7TV EventSource |
 | `!reconnectchat` | Reconnects the Twitch IRC WebSocket |
+| `!hidechat` | Hides the chat overlay until `!showchat` is sent |
+| `!showchat` | Shows the chat overlay again in the current session |
 
 ## Supported Services
 

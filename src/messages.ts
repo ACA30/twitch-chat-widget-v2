@@ -52,6 +52,9 @@ export class MessagesElement extends LitElement {
   @state()
   private commandAckIds: Set<string> = new Set();
 
+  @state()
+  private chatHidden = false;
+
   private lastEmoteImage?: string;
 
   constructor() {
@@ -59,6 +62,9 @@ export class MessagesElement extends LitElement {
 
     // we delay message appearances to allow for fossabot to time things out
     this.connection.onMessage((message) => {
+      if (this.chatHidden) {
+        return;
+      }
       if (hideBots && message.sender.badges.some((b) => b.id === "bot-badge")) {
         return;
       }
@@ -100,6 +106,17 @@ export class MessagesElement extends LitElement {
           console.log("[chat-cmd] Reloading external emote/badge data and reconnecting 7TV EventSource...");
           this.dispatchEvent(new CustomEvent("reloadws", { bubbles: true, composed: true }));
           break;
+        case "!hidechat":
+          console.log("[chat-cmd] Hiding chat overlay...");
+          this.chatHidden = true;
+          this.buffer = [];
+          this.lastEmoteImage = undefined;
+          this.delayedQueue.cleanup();
+          break;
+        case "!showchat":
+          console.log("[chat-cmd] Showing chat overlay...");
+          this.chatHidden = false;
+          break;
       }
     });
   }
@@ -115,6 +132,10 @@ export class MessagesElement extends LitElement {
   }
 
   render() {
+    if (this.chatHidden) {
+      return null;
+    }
+
     return html`
       <ul id="messages">
         ${repeat(
