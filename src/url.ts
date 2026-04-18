@@ -56,8 +56,16 @@ export const hideBots = (() => {
   return v === "0" || v === "false" || v === "off" || v === "no";
 })();
 
-/** When true, subscribe to 7TV emote-set SSE for live emote add/remove updates (extra connection + traffic). */
-export const seventvLiveUpdates = resolveSeventvLiveUpdates();
+/**
+ * When true (the default), connect to both the BTTV WebSocket and 7TV SSE for live
+ * channel emote updates. Set `?live=0` to opt out of all live connections.
+ */
+export const liveUpdates = (() => {
+  const raw = params.get("live");
+  if (raw === null) return true;
+  const v = raw.toLowerCase();
+  return !(v === "0" || v === "false" || v === "off" || v === "no");
+})();
 
 /** When false, mod/broadcaster message gradient highlights and role icons are hidden. Defaults to true. */
 export const highlightMods = (() => {
@@ -85,6 +93,3 @@ function resolveBoolParam(...keys: string[]) {
   return false;
 }
 
-function resolveSeventvLiveUpdates() {
-  return resolveBoolParam("seventv_live", "7tv_live");
-}

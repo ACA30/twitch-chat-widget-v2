@@ -63,11 +63,21 @@ export class ExternalStore<ExternalResponse, InternalModel> {
   delete(name: string) {
     delete this.store[name];
   }
+
+  /** Delete all entries where the predicate returns true. Used for ID-based removal when the key is a code/name. */
+  deleteWhere(pred: (value: InternalModel, key: string) => boolean) {
+    for (const key of Object.keys(this.store)) {
+      if (pred(this.store[key]!, key)) {
+        delete this.store[key];
+      }
+    }
+  }
 }
 
 type BttvEmote = { id: string; code: string };
-const bttvURL = (id: string) =>
-  `https://cdn.betterttv.net/emote/${encodeURIComponent(id)}/${isEmoteOnly() ? "3" : "1"}x`;
+export function bttvURL(id: string) {
+  return `https://cdn.betterttv.net/emote/${encodeURIComponent(id)}/${isEmoteOnly() ? "3" : "1"}x`;
+}
 
 const bttvGlobal = new ExternalStore<readonly BttvEmote[], Emote>(
   () => "https://api.betterttv.net/3/cached/emotes/global",
@@ -78,7 +88,7 @@ const bttvGlobal = new ExternalStore<readonly BttvEmote[], Emote>(
     }, {} as Record<string, Emote>),
 );
 
-const bttvUser = new ExternalStore<{ channelEmotes: readonly BttvEmote[]; sharedEmotes: readonly BttvEmote[] }, Emote>(
+export const bttvUser = new ExternalStore<{ channelEmotes: readonly BttvEmote[]; sharedEmotes: readonly BttvEmote[] }, Emote>(
   (id: string) => `https://api.betterttv.net/3/cached/users/twitch/${encodeURIComponent(id)}`,
   (body) =>
     [...body.channelEmotes, ...body.sharedEmotes].reduce((acc, cur) => {
