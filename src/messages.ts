@@ -89,7 +89,6 @@ export class MessagesElement extends LitElement {
 
       switch (cmd) {
         case "!reloadchat":
-        case "!refreshchat":
           console.log("[chat-cmd] Reloading page...");
           window.location.reload();
           break;

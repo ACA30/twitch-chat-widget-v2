@@ -1,10 +1,9 @@
 /**
- * 7TV namepaint support.
+ * 7TV namepaint + badge support.
  *
- * Paints are fetched lazily per unique chatter (two requests: one REST to get the 7TV
- * user ObjectID, one GQL to get the full paint definition). Results are cached for the
- * session so each chatter is only ever fetched once regardless of how many messages
- * they send.
+ * Cosmetics are fetched lazily per unique chatter (one REST call to get the 7TV user
+ * ObjectID + active cosmetic IDs, then one GQL call to resolve the full definitions).
+ * Results are cached for the session so each chatter is only ever fetched once.
  */
 
 export type PaintStyle = {
@@ -12,6 +11,16 @@ export type PaintStyle = {
   backgroundImage: string;
   /** CSS `filter` value for drop-shadows, or null when the paint has no shadows. */
   dropShadow: string | null;
+};
+
+export type SeventvBadge = {
+  url: string;
+  alt: string;
+};
+
+export type SeventvCosmetics = {
+  paint: PaintStyle | null;
+  badge: SeventvBadge | null;
 };
 
 // ─── ARGB helpers ────────────────────────────────────────────────────────────
@@ -77,10 +86,34 @@ function computePaintStyle(paint: SeventvPaintData): PaintStyle {
   return { backgroundImage, dropShadow };
 }
 
+// ─── Badge URL helpers ────────────────────────────────────────────────────────
+
+type SeventvBadgeData = {
+  name?: string;
+  tooltip?: string;
+  host?: {
+    url: string;
+    files?: readonly { name: string; format: string }[];
+  };
+};
+
+function resolveBadge(data: SeventvBadgeData): SeventvBadge | null {
+  const files = data.host?.files;
+  const file =
+    files?.find((f) => f.name.startsWith("1x") && f.format === "WEBP") ??
+    files?.find((f) => f.format === "WEBP") ??
+    files?.[0];
+  if (!file || !data.host?.url) return null;
+  return {
+    url: `https:${data.host.url}/${file.name}`,
+    alt: data.tooltip || data.name || "7TV Badge",
+  };
+}
+
 // ─── GQL query ───────────────────────────────────────────────────────────────
 
 const GQL_QUERY = `
-  query GetUserPaint($id: ObjectID!) {
+  query GetUserCosmetics($id: ObjectID!) {
     user(id: $id) {
       style {
         paint {
@@ -88,62 +121,76 @@ const GQL_QUERY = `
           stops { at color }
           shadows { x_offset y_offset radius color }
         }
+        badge {
+          id name tooltip
+          host { url files { name format } }
+        }
       }
     }
   }
 `;
 
-async function fetchPaintBySeventvId(seventvId: string): Promise<PaintStyle | null> {
+async function fetchCosmeticsBySeventvId(seventvId: string): Promise<SeventvCosmetics> {
   const resp = await fetch("https://7tv.io/v3/gql", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ query: GQL_QUERY, variables: { id: seventvId } }),
   });
 
-  if (!resp.ok) return null;
+  if (!resp.ok) return { paint: null, badge: null };
 
   const json = await resp.json();
-  const paint: SeventvPaintData | undefined = json?.data?.user?.style?.paint;
-  if (!paint) return null;
+  const style = json?.data?.user?.style;
 
-  return computePaintStyle(paint);
+  const paint: SeventvPaintData | undefined = style?.paint;
+  const badgeData: SeventvBadgeData | undefined = style?.badge;
+
+  return {
+    paint: paint ? computePaintStyle(paint) : null,
+    badge: badgeData ? resolveBadge(badgeData) : null,
+  };
 }
 
 // ─── Cache & public API ───────────────────────────────────────────────────────
 
 /**
- * Map from Twitch user ID → a settled Promise that resolves to PaintStyle or null.
- * Caching the Promise (not just the result) ensures simultaneous first-messages from
- * the same user share a single in-flight fetch rather than spawning duplicates.
+ * Map from Twitch user ID → a settled Promise<SeventvCosmetics>.
+ * Caching the Promise ensures simultaneous first-messages share a single in-flight fetch.
  */
-const cache = new Map<string, Promise<PaintStyle | null>>();
+const cache = new Map<string, Promise<SeventvCosmetics>>();
 
 /**
- * Fetch and cache the 7TV namepaint for a given Twitch user ID.
- * Returns `null` if the user has no 7TV account, no paint, or if any request fails.
+ * Fetch and cache the 7TV cosmetics (paint + badge) for a given Twitch user ID.
+ * Both fields are null if the user has no 7TV account or no cosmetics assigned.
  */
-export function fetchPaint(twitchUserId: string): Promise<PaintStyle | null> {
+export function fetchSeventvCosmetics(twitchUserId: string): Promise<SeventvCosmetics> {
   const existing = cache.get(twitchUserId);
   if (existing) return existing;
 
-  const promise = (async (): Promise<PaintStyle | null> => {
+  const promise = (async (): Promise<SeventvCosmetics> => {
     try {
       const resp = await fetch(`https://7tv.io/v3/users/twitch/${encodeURIComponent(twitchUserId)}`);
-      if (!resp.ok) return null;
+      if (!resp.ok) return { paint: null, badge: null };
 
       const data = await resp.json();
       const seventvId: string | undefined = data?.user?.id;
       const paintId: string | undefined = data?.user?.style?.paint_id;
+      const badgeId: string | undefined = data?.user?.style?.badge_id;
 
-      // Skip the GQL call entirely if the user has no paint assigned.
-      if (!seventvId || !paintId) return null;
+      // No 7TV account, or no cosmetics assigned at all — skip the GQL call.
+      if (!seventvId || (!paintId && !badgeId)) return { paint: null, badge: null };
 
-      return await fetchPaintBySeventvId(seventvId);
+      return await fetchCosmeticsBySeventvId(seventvId);
     } catch {
-      return null;
+      return { paint: null, badge: null };
     }
   })();
 
   cache.set(twitchUserId, promise);
   return promise;
+}
+
+/** @deprecated Use fetchSeventvCosmetics and read `.paint` instead. */
+export function fetchPaint(twitchUserId: string): Promise<PaintStyle | null> {
+  return fetchSeventvCosmetics(twitchUserId).then((c) => c.paint);
 }

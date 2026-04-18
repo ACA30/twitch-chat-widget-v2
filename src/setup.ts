@@ -408,7 +408,7 @@ export class SetupElement extends LitElement {
     }
 
     if (!this.liveUpdates) params.set("live", "0");
-    if (this.seventvPaints) params.set("seventv_paints", "1");
+    if (this.seventvPaints) params.set("paints", "1");
     if (this.hideBots) params.set("bots", "0");
     if (!this.chatCommandsEnabled) params.set("commands", "0");
     if (!this.highlightMods) params.set("highlight_mods", "0");
@@ -619,7 +619,7 @@ export class SetupElement extends LitElement {
               </label>
               <span>${this.hideBots ? "Enabled" : "Disabled"}</span>
             </div>
-            <p class="hint-text">Suppresses messages from users with the Twitch bot badge (<code>bot-badge/1</code>).</p>
+            <p class="hint-text">Suppresses messages from users with the Twitch bot badge. Adds <code>bots=0</code> to the URL.</p>
           </div>
 
           <div class="field">
@@ -701,10 +701,6 @@ export class SetupElement extends LitElement {
             <li class="cmd-row">
               <span class="cmd-name">!reloadchat</span>
               <span class="cmd-desc">Reloads the overlay page.</span>
-            </li>
-            <li class="cmd-row">
-              <span class="cmd-name">!refreshchat</span>
-              <span class="cmd-desc">Alias for <code>!reloadchat</code>.</span>
             </li>
             <li class="cmd-row">
               <span class="cmd-name">!reloadws</span>
