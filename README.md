@@ -27,6 +27,7 @@ https://twitch-chat-widget.nateb.ca/115356177-aca30doesgames
 | `bots` | `0` | show | Set to `0` to hide messages from users with the Twitch bot badge |
 | `seventv_live` | `1` | off | Subscribe to live 7TV emote-set updates via SSE |
 | `seventv_paints` | `1` | off | Fetch and render 7TV namepaints on chatter names |
+| `commands` | `0` | on | Set to `0` to disable broadcaster/mod chat commands |
 
 **Examples:**
 
@@ -37,6 +38,17 @@ https://twitch-chat-widget.nateb.ca/115356177-aca30doesgames?theme=simple&fadeou
 # Default theme, no fade, live 7TV emote updates, namepaints
 https://twitch-chat-widget.nateb.ca/115356177-aca30doesgames?fadeout=off&seventv_live=1&seventv_paints=1
 ```
+
+## Chat Commands
+
+The broadcaster and moderators can send the following commands in chat to control the overlay. A subtle checkmark appears on the command message when it is acknowledged. Commands can be disabled with `?commands=0`.
+
+| Command | Description |
+|---------|-------------|
+| `!reloadchat` | Reloads the overlay page |
+| `!refreshchat` | Alias for `!reloadchat` |
+| `!reloadws` | Re-fetches all emote/badge data and reconnects the 7TV EventSource |
+| `!reconnectchat` | Reconnects the Twitch IRC WebSocket |
 
 ## Supported Services
 

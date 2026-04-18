@@ -1,11 +1,11 @@
 import { LitElement, css, html } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { customElement, property, state } from "lit/decorators.js";
 import { repeat } from "lit/directives/repeat.js";
 import { DelayedQueue } from "./delayed-queue";
 import { ImageFragment } from "./fragment";
 import "./message";
 import { FragmentedChatMessage, TwitchConnection } from "./twitch-connection";
-import { hideBots, isEmoteOnly } from "./url";
+import { chatCommands, hideBots, isEmoteOnly } from "./url";
 
 const MAX_BUFFER = 100;
 
@@ -49,6 +49,9 @@ export class MessagesElement extends LitElement {
   @property()
   private buffer: FragmentedChatMessage[] = [];
 
+  @state()
+  private commandAckIds: Set<string> = new Set();
+
   private lastEmoteImage?: string;
 
   constructor() {
@@ -80,6 +83,26 @@ export class MessagesElement extends LitElement {
       // evict from the queue if it's not on screen yet
       this.delayedQueue.evictAllEventsInGroup(login);
     });
+
+    if (chatCommands) this.connection.onCommand((cmd, messageId) => {
+      this.commandAckIds = new Set([...this.commandAckIds, messageId]);
+
+      switch (cmd) {
+        case "!reloadchat":
+        case "!refreshchat":
+          console.log("[chat-cmd] Reloading page...");
+          window.location.reload();
+          break;
+        case "!reconnectchat":
+          console.log("[chat-cmd] Reconnecting to Twitch IRC...");
+          this.connection.reconnect();
+          break;
+        case "!reloadws":
+          console.log("[chat-cmd] Reloading external emote/badge data and reconnecting 7TV EventSource...");
+          this.dispatchEvent(new CustomEvent("reloadws", { bubbles: true, composed: true }));
+          break;
+      }
+    });
   }
 
   connectedCallback() {
@@ -100,7 +123,7 @@ export class MessagesElement extends LitElement {
           (m) => m.id,
           (message) => html`
             <li id="${message.id}" class="message">
-              <app-message .message=${message}></app-message>
+              <app-message .message=${message} .commandAck=${this.commandAckIds.has(message.id)}></app-message>
             </li>
           `,
         )}

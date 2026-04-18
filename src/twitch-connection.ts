@@ -4,6 +4,9 @@ import { FragmentGenerationFactory } from "./fragment";
 export type ChatMessage = ReturnType<typeof buildMessage>;
 export type FragmentedChatMessage = ReturnType<typeof extendMessageWithFragments>;
 
+export const CHAT_COMMANDS = ["!reloadchat", "!refreshchat", "!reloadws", "!reconnectchat"] as const;
+export type ChatCommand = (typeof CHAT_COMMANDS)[number];
+
 enum ConnectionState {
   Connected,
   Connecting,
@@ -24,6 +27,7 @@ export class TwitchConnection {
   private messageCallback?: (msg: FragmentedChatMessage) => void;
   private userTimeoutCallback?: (login: string) => void;
   private deleteMessageCallback?: (id: string) => void;
+  private commandCallback?: (cmd: ChatCommand, messageId: string) => void;
   private connectionTimeout?: ReturnType<typeof setTimeout>;
 
   public join(login: string) {
@@ -80,6 +84,10 @@ export class TwitchConnection {
     this.deleteMessageCallback = cb;
   }
 
+  public onCommand(cb: (cmd: ChatCommand, messageId: string) => void) {
+    this.commandCallback = cb;
+  }
+
   private handleLine(line: string) {
     if (!line) return;
     const parsed = parseMessage(line);
@@ -91,7 +99,20 @@ export class TwitchConnection {
       }
 
       case "PRIVMSG": {
-        return this.messageCallback?.(extendMessageWithFragments(buildMessage(parsed)));
+        const msg = buildMessage(parsed);
+        if (this.commandCallback) {
+          const isPrivileged = msg.sender.badges.some(
+            (b) => b.id === "broadcaster" || b.id === "moderator",
+          );
+          if (isPrivileged) {
+            const text = msg.content.text.trim().toLowerCase() as ChatCommand;
+            if ((CHAT_COMMANDS as readonly string[]).includes(text)) {
+              console.log(`[chat-cmd] ${text} triggered by ${msg.sender.login}`);
+              this.commandCallback(text, msg.id);
+            }
+          }
+        }
+        return this.messageCallback?.(extendMessageWithFragments(msg));
       }
 
       case "CLEARCHAT": {
@@ -119,6 +140,24 @@ export class TwitchConnection {
   public disconnect(): void {
     this.forceDisconnect = true;
     this.conn && this.conn.close();
+  }
+
+  public reconnect(): void {
+    this.forceDisconnect = false;
+    this.connectionAttempts = 0;
+    // Detach all handlers before closing so onclose doesn't trigger
+    // handleDisconnect and race against the new connection we're about to open.
+    if (this.conn) {
+      this.conn.onopen = null;
+      this.conn.onmessage = null;
+      this.conn.onerror = null;
+      this.conn.onclose = null;
+      this.conn.close();
+      this.conn = undefined;
+    }
+    this.connectionTimeout && clearTimeout(this.connectionTimeout);
+    this.state = ConnectionState.Disconnected;
+    this.connect();
   }
 
   private send(line: string) {

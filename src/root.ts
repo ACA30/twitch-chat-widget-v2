@@ -16,6 +16,7 @@ export class RootElement extends LitElement {
   private showSetup = false;
 
   private seventvEvents = new SeventvEventSource();
+  private channelID?: string;
 
   static styles = css`
     :host {
@@ -39,6 +40,9 @@ export class RootElement extends LitElement {
       return;
     }
 
+    this.channelID = parsed[0];
+    this.addEventListener("reloadws", this.handleReloadWS);
+
     loadData(parsed[0]).then(() => {
       this.channelLogin = parsed[1];
       const setID = getSeventvUserEmoteSetID();
@@ -50,8 +54,23 @@ export class RootElement extends LitElement {
 
   disconnectedCallback() {
     super.disconnectedCallback();
+    this.removeEventListener("reloadws", this.handleReloadWS);
     this.seventvEvents.disconnect();
   }
+
+  private handleReloadWS = () => {
+    if (!this.channelID) return;
+    this.seventvEvents.disconnect();
+    loadData(this.channelID).then(() => {
+      const setID = getSeventvUserEmoteSetID();
+      if (setID && seventvLiveUpdates) {
+        console.log(`[chat-cmd] Reconnecting 7TV EventSource for emote set ${setID}`);
+        this.seventvEvents.connect(setID);
+      } else {
+        console.log("[chat-cmd] External data reloaded (7TV live updates not enabled, skipping EventSource reconnect)");
+      }
+    });
+  };
 
   render() {
     if (this.showSetup) {
