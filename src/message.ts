@@ -181,6 +181,10 @@ export class MessageElement extends LitElement {
         line-height: 1;
       }
 
+      .message.message-has-icon {
+        padding-right: 28px;
+      }
+
       .message-has-icon .cmd-ack {
         right: 26px;
       }
