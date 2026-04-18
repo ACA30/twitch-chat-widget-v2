@@ -486,9 +486,9 @@ export class SetupElement extends LitElement {
   render() {
     const url = this.generatedURL;
     const themeDescriptions: Record<Theme, string> = {
-      default: "Standard chat with emotes and badges.",
-      simple: "Minimal text-only style without emote images.",
-      emote_dark: "Only shows messages containing a unique emote.",
+      default: "Standard dark chat bubbles with badges and emotes.",
+      simple: "Minimal floating text with a soft outline, no background.",
+      emote_dark: "Only displays messages that contain an emote.",
     };
 
     return html`
@@ -619,7 +619,7 @@ export class SetupElement extends LitElement {
               </label>
               <span>${this.hideBots ? "Enabled" : "Disabled"}</span>
             </div>
-            <p class="hint-text">Suppresses messages from users with the Twitch bot badge. Adds <code>bots=0</code> to the URL.</p>
+            <p class="hint-text">Messages from known Twitch bots won't appear in the overlay.</p>
           </div>
 
           <div class="field">
@@ -637,7 +637,7 @@ export class SetupElement extends LitElement {
               </label>
               <span>${this.liveUpdates ? "Enabled" : "Disabled"}</span>
             </div>
-            <p class="hint-text">Subscribes to BTTV (WebSocket) and 7TV (SSE) for real-time channel emote changes. On by default.</p>
+            <p class="hint-text">Emote sets update instantly when the channel adds or removes emotes, without a page reload.</p>
           </div>
 
           <div class="field">
@@ -655,7 +655,7 @@ export class SetupElement extends LitElement {
               </label>
               <span>${this.seventvPaints ? "Enabled" : "Disabled"}</span>
             </div>
-            <p class="hint-text">Fetches and renders 7TV namepaints on chatter names. Fires up to two requests per unique chatter, cached for the session.</p>
+            <p class="hint-text">Renders 7TV users' custom name gradients and styles on their chat names.</p>
           </div>
 
           <div class="field">
@@ -673,7 +673,7 @@ export class SetupElement extends LitElement {
               </label>
               <span>${this.chatCommandsEnabled ? "Enabled" : "Disabled"}</span>
             </div>
-            <p class="hint-text">Allows the broadcaster and moderators to control the overlay via chat. See the command reference below.</p>
+            <p class="hint-text">The broadcaster and moderators can reload or reconnect the overlay by typing commands in chat.</p>
           </div>
 
           <div class="field">
@@ -691,10 +691,11 @@ export class SetupElement extends LitElement {
               </label>
               <span>${this.highlightMods ? "Enabled" : "Disabled"}</span>
             </div>
-            <p class="hint-text">Adds a subtle green gradient and icon to moderator messages, and red for the broadcaster.</p>
+            <p class="hint-text">Moderator messages get a subtle green tint; broadcaster messages get red.</p>
           </div>
         </div>
 
+        ${this.chatCommandsEnabled ? html`
         <div class="card">
           <h2>Chat Commands</h2>
           <ul class="cmd-list">
@@ -712,7 +713,7 @@ export class SetupElement extends LitElement {
             </li>
           </ul>
           <p class="hint-text" style="margin-top:14px">Only the broadcaster and moderators can trigger these. A subtle checkmark appears on the command message when it is acknowledged.</p>
-        </div>
+        </div>` : null}
 
         <div class="card url-card">
           <h2>Widget URL</h2>
