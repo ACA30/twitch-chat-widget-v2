@@ -44,3 +44,15 @@ function resolveFadeout() {
 export function isEmoteOnly() {
   return theme === "emote_dark";
 }
+
+/** When true, subscribe to 7TV emote-set SSE for live emote add/remove updates (extra connection + traffic). */
+export const seventvLiveUpdates = resolveSeventvLiveUpdates();
+function resolveSeventvLiveUpdates() {
+  const raw = params.get("seventv_live") ?? params.get("7tv_live");
+  if (!raw) {
+    return false;
+  }
+
+  const v = raw.toLowerCase();
+  return v === "1" || v === "true" || v === "yes" || v === "on";
+}
