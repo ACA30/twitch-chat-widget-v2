@@ -25,7 +25,7 @@ https://twitch-chat-widget.nateb.ca/115356177-aca30doesgames
 | `theme` | `default`, `simple`, `emote_dark` | `default` | Visual theme |
 | `fadeout` | seconds, `off` | `15` | Seconds before messages fade out (`off` disables) |
 | `bots` | `0` | show | Set to `0` to hide messages from users with the Twitch bot badge |
-| `seventv_live` | `1` | off | Subscribe to live 7TV emote-set updates via SSE |
+| `live` | `0` | on | Set to `0` to disable all live emote-set connections (BTTV WebSocket + 7TV SSE) |
 | `seventv_paints` | `1` | off | Fetch and render 7TV namepaints on chatter names |
 | `commands` | `0` | on | Set to `0` to disable broadcaster/mod chat commands |
 
@@ -55,8 +55,8 @@ The broadcaster and moderators can send the following commands in chat to contro
 | Service | Features |
 |---------|----------|
 | <img src="https://assets.twitch.tv/assets/favicon-32-e29e246c157142c94346.png" width="20" /> **[Twitch](https://www.twitch.tv/)** | **Emotes:** Global, Channel, Sub, Bits<br>**Badges:** Global, Channel (Sub, Bits)<br>**Moderation:** Delete Messages, Timeouts, Bans, Chat Clears |
-| <img src="https://7tv.app/favicon.svg" width="20" /> **[7TV](https://7tv.app/)** | **Emotes:** Global, Channel, Zero-Width<br>**Live Updates:** Channel emote set via SSE (`?seventv_live=1`)<br>**User Customization:** Namepaints (`?seventv_paints=1`) |
-| <img src="https://betterttv.com/favicon.png" width="20" /> **[BTTV](https://betterttv.com/)** | **Emotes:** Global, Channel |
+| <img src="https://7tv.app/favicon.svg" width="20" /> **[7TV](https://7tv.app/)** | **Emotes:** Global, Channel, Zero-Width<br>**Live Updates:** Channel emote set via SSE (on by default, `?live=0` to disable)<br>**User Customization:** Namepaints (`?seventv_paints=1`) |
+| <img src="https://betterttv.com/favicon.png" width="20" /> **[BTTV](https://betterttv.com/)** | **Emotes:** Global, Channel<br>**Live Updates:** Channel emote set via WebSocket (on by default, `?live=0` to disable) |
 | <img src="https://www.frankerfacez.com/static/images/favicon-32.png" width="20" /> **[FFZ](https://www.frankerfacez.com/)** | **Emotes:** Global, Channel |
 
 ## TODO
@@ -65,5 +65,5 @@ Feature ideas not yet implemented:
 
 - **7TV personal/special emote sets** — sets assigned to individual chatters rather than the channel
 - **7TV badges** — cosmetic badges granted to 7TV subscribers/staff
-- **BTTV live emote-set updates** — equivalent of the existing `?seventv_live` feature for BTTV channel emotes
+- ~~**BTTV live emote-set updates**~~ — implemented (`?bttv_live=1`)
 - **FFZ badges** — global and channel-level FFZ badge support

@@ -76,11 +76,13 @@ export class SeventvEventSource {
       }
 
       const flags = (item.value.flags ?? 0) | (item.value.data?.flags ?? 0);
+      const zeroWidth = (flags & SEVENTV_EMOTE_FLAG_ZERO_WIDTH) !== 0;
       seventvUser.set(item.value.name, {
         id: item.value.id,
         url: resolveRelevant7tvURL(item.value.data.host),
-        zeroWidth: (flags & SEVENTV_EMOTE_FLAG_ZERO_WIDTH) !== 0,
+        zeroWidth,
       });
+      console.log(`[7TV] emote added: ${item.value.name}${zeroWidth ? " (zero-width)" : ""}`);
     }
 
     for (const item of body.pulled ?? []) {
@@ -89,6 +91,7 @@ export class SeventvEventSource {
       const name = item.old_value?.name ?? item.value?.name;
       if (name) {
         seventvUser.delete(name);
+        console.log(`[7TV] emote removed: ${name}`);
       }
     }
   }

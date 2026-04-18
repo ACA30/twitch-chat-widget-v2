@@ -11,7 +11,7 @@ export class SetupElement extends LitElement {
   @state() private theme: Theme = "default";
   @state() private fadeoutEnabled = true;
   @state() private fadeoutSeconds = "15";
-  @state() private seventvLive = false;
+  @state() private liveUpdates = true;
   @state() private seventvPaints = false;
   @state() private hideBots = false;
   @state() private chatCommandsEnabled = true;
@@ -407,7 +407,7 @@ export class SetupElement extends LitElement {
       }
     }
 
-    if (this.seventvLive) params.set("seventv_live", "1");
+    if (!this.liveUpdates) params.set("live", "0");
     if (this.seventvPaints) params.set("seventv_paints", "1");
     if (this.hideBots) params.set("bots", "0");
     if (!this.chatCommandsEnabled) params.set("commands", "0");
@@ -623,21 +623,21 @@ export class SetupElement extends LitElement {
           </div>
 
           <div class="field">
-            <label>7TV live emote updates</label>
+            <label>Live emote updates</label>
             <div class="toggle-row">
               <label class="toggle">
                 <input
                   type="checkbox"
-                  .checked=${this.seventvLive}
+                  .checked=${this.liveUpdates}
                   @change=${(e: Event) => {
-                    this.seventvLive = (e.target as HTMLInputElement).checked;
+                    this.liveUpdates = (e.target as HTMLInputElement).checked;
                   }}
                 />
                 <span class="slider"></span>
               </label>
-              <span>${this.seventvLive ? "Enabled" : "Disabled"}</span>
+              <span>${this.liveUpdates ? "Enabled" : "Disabled"}</span>
             </div>
-            <p class="hint-text">Subscribes to 7TV SSE for real-time emote set changes. Uses an extra persistent connection.</p>
+            <p class="hint-text">Subscribes to BTTV (WebSocket) and 7TV (SSE) for real-time channel emote changes. On by default.</p>
           </div>
 
           <div class="field">

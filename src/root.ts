@@ -2,10 +2,11 @@ import { LitElement, css, html } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { when } from "lit/directives/when.js";
 import { getSeventvUserEmoteSetID, loadData } from "./external-data";
+import { BttvEventSource } from "./bttv-events";
 import { SeventvEventSource } from "./seventv-events";
 import "./messages";
 import "./setup";
-import { parseChannelFromURL, seventvLiveUpdates } from "./url";
+import { liveUpdates, parseChannelFromURL } from "./url";
 
 @customElement("app-root")
 export class RootElement extends LitElement {
@@ -16,6 +17,7 @@ export class RootElement extends LitElement {
   private showSetup = false;
 
   private seventvEvents = new SeventvEventSource();
+  private bttvEvents = new BttvEventSource();
   private channelID?: string;
 
   static styles = css`
@@ -45,9 +47,10 @@ export class RootElement extends LitElement {
 
     loadData(parsed[0]).then(() => {
       this.channelLogin = parsed[1];
-      const setID = getSeventvUserEmoteSetID();
-      if (setID && seventvLiveUpdates) {
-        this.seventvEvents.connect(setID);
+      if (liveUpdates) {
+        const setID = getSeventvUserEmoteSetID();
+        if (setID) this.seventvEvents.connect(setID);
+        this.bttvEvents.connect(parsed[0]);
       }
     });
   }
@@ -56,18 +59,18 @@ export class RootElement extends LitElement {
     super.disconnectedCallback();
     this.removeEventListener("reloadws", this.handleReloadWS);
     this.seventvEvents.disconnect();
+    this.bttvEvents.disconnect();
   }
 
   private handleReloadWS = () => {
     if (!this.channelID) return;
     this.seventvEvents.disconnect();
+    this.bttvEvents.disconnect();
     loadData(this.channelID).then(() => {
-      const setID = getSeventvUserEmoteSetID();
-      if (setID && seventvLiveUpdates) {
-        console.log(`[chat-cmd] Reconnecting 7TV EventSource for emote set ${setID}`);
-        this.seventvEvents.connect(setID);
-      } else {
-        console.log("[chat-cmd] External data reloaded (7TV live updates not enabled, skipping EventSource reconnect)");
+      if (liveUpdates) {
+        const setID = getSeventvUserEmoteSetID();
+        if (setID) this.seventvEvents.connect(setID);
+        this.bttvEvents.connect(this.channelID!);
       }
     });
   };
