@@ -1,14 +1,17 @@
 import { LitElement, html } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { when } from "lit/directives/when.js";
-import { loadData } from "./external-data";
+import { getSeventvUserEmoteSetID, loadData } from "./external-data";
+import { SeventvEventSource } from "./seventv-events";
 import "./messages";
-import { parseChannelFromURL } from "./url";
+import { parseChannelFromURL, seventvLiveUpdates } from "./url";
 
 @customElement("app-root")
 export class RootElement extends LitElement {
   @state()
   private channelLogin?: string;
+
+  private seventvEvents = new SeventvEventSource();
 
   constructor() {
     super();
@@ -26,7 +29,16 @@ export class RootElement extends LitElement {
 
     loadData(parsed[0]).then(() => {
       this.channelLogin = parsed[1];
+      const setID = getSeventvUserEmoteSetID();
+      if (setID && seventvLiveUpdates) {
+        this.seventvEvents.connect(setID);
+      }
     });
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    this.seventvEvents.disconnect();
   }
 
   render() {

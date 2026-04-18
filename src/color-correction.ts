@@ -81,7 +81,10 @@ export class ColorCorrection {
 
     this.cache.set(color, newColor);
 
-    this.cache.size > 1000 && this.cache.delete(this.cache.entries().next().value[0]);
+    if (this.cache.size > 1000) {
+      const first = this.cache.entries().next().value;
+      if (first) this.cache.delete(first[0]);
+    }
 
     return newColor;
   }

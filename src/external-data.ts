@@ -31,6 +31,14 @@ export class ExternalStore<ExternalResponse, InternalModel> {
   get(code: string) {
     return this.store[code] || null;
   }
+
+  set(name: string, value: InternalModel) {
+    this.store[name] = value;
+  }
+
+  delete(name: string) {
+    delete this.store[name];
+  }
 }
 
 type BttvEmote = { id: string; code: string };
@@ -55,7 +63,7 @@ const bttvUser = new ExternalStore<{ channelEmotes: readonly BttvEmote[]; shared
     }, {} as Record<string, Emote>),
 );
 
-type SeventvEmote = {
+export type SeventvEmote = {
   id: string;
   name: string;
   data: {
@@ -72,7 +80,7 @@ type SeventvEmote = {
 };
 
 // they give us a shit ton of metadata... they can't just tell us the emote or use a consistent format... *cries*
-function resolveRelevant7tvURL(host: SeventvEmote["data"]["host"]) {
+export function resolveRelevant7tvURL(host: SeventvEmote["data"]["host"]) {
   let selected = host.files[0];
 
   for (const file of host.files) {
@@ -107,14 +115,27 @@ const seventvGlobal = new ExternalStore<{ emotes: readonly SeventvEmote[] }, Emo
     }, {} as Record<string, Emote>),
 );
 
-const seventvUser = new ExternalStore<{ emote_set: { emotes: readonly SeventvEmote[] } }, Emote>(
+let seventvUserEmoteSetID: string | undefined;
+
+export const seventvUser = new ExternalStore<
+  { emote_set: { id: string; emotes: readonly SeventvEmote[] } },
+  Emote
+>(
   (channelID: string) => `https://7tv.io/v3/users/twitch/${encodeURIComponent(channelID)}`,
-  (body) =>
-    body?.emote_set?.emotes?.reduce((acc, cur) => {
-      acc[cur.name] = { id: cur.id, url: resolveRelevant7tvURL(cur.data.host) };
-      return acc;
-    }, {} as Record<string, Emote>),
+  (body) => {
+    seventvUserEmoteSetID = body?.emote_set?.id;
+    return (
+      body?.emote_set?.emotes?.reduce((acc, cur) => {
+        acc[cur.name] = { id: cur.id, url: resolveRelevant7tvURL(cur.data.host) };
+        return acc;
+      }, {} as Record<string, Emote>) ?? {}
+    );
+  },
 );
+
+export function getSeventvUserEmoteSetID() {
+  return seventvUserEmoteSetID;
+}
 
 type FfzEmote = { id: number; name: string; urls: Record<string, string> };
 const findFfzURL = (urls: Record<string, string>) => {
