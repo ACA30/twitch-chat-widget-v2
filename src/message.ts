@@ -4,9 +4,9 @@ import { classMap } from "lit/directives/class-map.js";
 import { map } from "lit/directives/map.js";
 import { styleMap } from "lit/directives/style-map.js";
 import { ColorCorrection } from "./color-correction";
-import { lookupBadge } from "./external-data";
+import { lookupBadge, lookupFfzBadges } from "./external-data";
 import { Fragment } from "./fragment";
-import { PaintStyle, fetchPaint } from "./seventv-paints";
+import { PaintStyle, SeventvBadge, fetchSeventvCosmetics } from "./seventv-paints";
 import { FragmentedChatMessage } from "./twitch-connection";
 import { Theme, isEmoteOnly, theme, fadeout, seventvPaints, highlightMods } from "./url";
 
@@ -75,6 +75,9 @@ export class MessageElement extends LitElement {
   @state()
   private paint: PaintStyle | null = null;
 
+  @state()
+  private seventvBadge: SeventvBadge | null = null;
+
   static styles = [
     css`
       :host {
@@ -126,13 +129,16 @@ export class MessageElement extends LitElement {
       }
 
       .badges {
-        display: inline;
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+        vertical-align: middle;
+        margin-right: 1px;
       }
 
       .badge {
-        margin-right: 2px;
-        display: inline-block;
-        margin-bottom: -4px;
+        display: block;
+        flex-shrink: 0;
       }
 
       .message {
@@ -206,9 +212,10 @@ export class MessageElement extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    if (seventvPaints && this.message?.sender.id) {
-      fetchPaint(this.message.sender.id).then((p) => {
-        this.paint = p;
+    if (this.message?.sender.id) {
+      fetchSeventvCosmetics(this.message.sender.id).then((c) => {
+        this.seventvBadge = c.badge;
+        if (seventvPaints) this.paint = c.paint;
       });
     }
   }
@@ -234,12 +241,15 @@ export class MessageElement extends LitElement {
           <span class="badges">
             ${map(this.message.sender.badges, (badge) => {
               const version = lookupBadge(badge.id, badge.version);
-              if (!version) {
-                return null;
-              }
-
+              if (!version) return null;
               return html`<img src="${version.url}" alt="${version.alt}" class="badge" />`;
             })}
+            ${this.seventvBadge
+              ? html`<img src="${this.seventvBadge.url}" alt="${this.seventvBadge.alt}" title="${this.seventvBadge.alt}" class="badge" />`
+              : null}
+            ${map(lookupFfzBadges(this.message.sender.login), (badge) =>
+              html`<img src="${badge.url}" alt="${badge.alt}" title="${badge.alt}" class="badge" />`,
+            )}
           </span>
           <span
             class="${classMap({ name: true, "name-painted": !!this.paint?.backgroundImage })}"

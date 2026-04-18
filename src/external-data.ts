@@ -222,6 +222,59 @@ const ffzUser = new ExternalStore<
     }, {} as Record<string, Emote>),
 );
 
+// ---- Third-party badge types ----
+
+export type ThirdPartyBadge = { url: string; alt: string };
+
+/**
+ * FFZ global badges — keyed by Twitch **login name** (lowercase), which is what
+ * the FFZ /v1/badges endpoint uses in its `users` mapping.
+ *
+ * 7TV badges are fetched per-user in seventv-paints.ts and stored in component state.
+ */
+type FfzBadge = { id: number; name: string; title: string; urls: Record<string, string> };
+type FfzBadgesBody = {
+  badges: readonly FfzBadge[];
+  users: Record<string, readonly string[]>; // badge_id → [twitchLogin, ...]
+};
+
+const ffzBadgesByLogin = new Map<string, ThirdPartyBadge[]>();
+
+async function loadFfzBadges() {
+  ffzBadgesByLogin.clear();
+  try {
+    const resp = await fetch("https://api.frankerfacez.com/v1/badges");
+    if (!resp.ok) return;
+    const body = (await resp.json()) as FfzBadgesBody;
+    const badgeDefs = new Map<number, ThirdPartyBadge>();
+    for (const badge of body.badges ?? []) {
+      const urlEntries = Object.entries(badge.urls);
+      if (!urlEntries.length) continue;
+      // prefer 1x, fall back to first available
+      const url = badge.urls["1"] ?? urlEntries[0]![1];
+      badgeDefs.set(badge.id, { url, alt: badge.title || badge.name });
+    }
+    for (const [badgeIdStr, logins] of Object.entries(body.users ?? {})) {
+      const def = badgeDefs.get(Number(badgeIdStr));
+      if (!def) continue;
+      for (const login of logins) {
+        let list = ffzBadgesByLogin.get(login);
+        if (!list) ffzBadgesByLogin.set(login, (list = []));
+        list.push(def);
+      }
+    }
+  } catch {
+    // non-critical
+  }
+}
+
+/** Returns FFZ global badges for the given Twitch login name (lowercase). */
+export function lookupFfzBadges(twitchLogin: string): readonly ThirdPartyBadge[] {
+  return ffzBadgesByLogin.get(twitchLogin) ?? [];
+}
+
+// ---- Twitch badge types (from Fossabot cache) ----
+
 export type Badge = Record<string, { alt: string; url: string }>;
 type FossaAsset = { alt: string; url: string };
 
@@ -297,5 +350,6 @@ export function loadData(channelID: string) {
     ffzUser.load(channelID),
     seventvGlobal.load(channelID),
     seventvUser.load(channelID),
+    loadFfzBadges(),
   ]).catch((error) => console.error(`Failed to load emote stores: ${error}`));
 }

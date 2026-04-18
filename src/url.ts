@@ -45,10 +45,13 @@ export function isEmoteOnly() {
   return theme === "emote_dark";
 }
 
-/** When true, fetch and display 7TV namepaints for chatters (one REST + one GQL call per unique chatter, cached). */
-export const seventvPaints = resolveBoolParam("seventv_paints");
+/**
+ * When true, fetch and display 7TV namepaints for chatters.
+ * Primary: `?paints=1`. Legacy alias: `?seventv_paints=1`.
+ */
+export const seventvPaints = resolveBoolParam("paints", "seventv_paints");
 
-/** When true, messages from users with the Twitch bot badge (bot-badge/1) are hidden. */
+/** When false (`?bots=0`), messages from users with the Twitch bot badge are hidden. Defaults to true. */
 export const hideBots = (() => {
   const raw = params.get("bots");
   if (raw === null) return false;
