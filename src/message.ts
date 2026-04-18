@@ -1,13 +1,14 @@
 import { LitElement, css, html } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { customElement, property, state } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 import { map } from "lit/directives/map.js";
 import { styleMap } from "lit/directives/style-map.js";
 import { ColorCorrection } from "./color-correction";
 import { lookupBadge } from "./external-data";
 import { Fragment } from "./fragment";
+import { PaintStyle, fetchPaint } from "./seventv-paints";
 import { FragmentedChatMessage } from "./twitch-connection";
-import { Theme, isEmoteOnly, theme, fadeout } from "./url";
+import { Theme, isEmoteOnly, theme, fadeout, seventvPaints } from "./url";
 
 const colorCorrection = new ColorCorrection();
 
@@ -59,6 +60,9 @@ const themes: Record<Theme, ReturnType<typeof css>> = {
 export class MessageElement extends LitElement {
   @property()
   message?: FragmentedChatMessage;
+
+  @state()
+  private paint: PaintStyle | null = null;
 
   static styles = [
     css`
@@ -125,6 +129,12 @@ export class MessageElement extends LitElement {
         padding-right: 3px;
       }
 
+      .name-painted {
+        background-clip: text;
+        -webkit-background-clip: text;
+        color: transparent;
+      }
+
       @keyframes fade-out {
         from {
           opacity: 1;
@@ -136,6 +146,15 @@ export class MessageElement extends LitElement {
     `,
     themes[theme],
   ];
+
+  connectedCallback() {
+    super.connectedCallback();
+    if (seventvPaints && this.message?.sender.id) {
+      fetchPaint(this.message.sender.id).then((p) => {
+        this.paint = p;
+      });
+    }
+  }
 
   render() {
     if (!this.message) {
@@ -164,8 +183,8 @@ export class MessageElement extends LitElement {
             })}
           </span>
           <span
-            class="name"
-            style="${styleMap({ color: colorCorrection.calculate(resolveNameColor(this.message.sender)) })}"
+            class="${classMap({ name: true, "name-painted": !!this.paint?.backgroundImage })}"
+            style="${styleMap(resolveNameStyle(this.message.sender, this.paint))}"
             >${renderName(this.message.sender)}:</span
           >
           <span class="${classMap({ content: true, italic: this.message.content.action })}"
@@ -207,6 +226,20 @@ function renderName(sender: FragmentedChatMessage["sender"]) {
 
 function resolveNameColor(sender: FragmentedChatMessage["sender"]) {
   return sender.color || "#aaa";
+}
+
+function resolveNameStyle(
+  sender: FragmentedChatMessage["sender"],
+  paint: PaintStyle | null,
+): Record<string, string> {
+  if (paint?.backgroundImage) {
+    return {
+      backgroundImage: paint.backgroundImage,
+      ...(paint.dropShadow ? { filter: paint.dropShadow } : {}),
+    };
+  }
+
+  return { color: colorCorrection.calculate(resolveNameColor(sender)) };
 }
 
 declare global {
