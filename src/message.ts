@@ -86,6 +86,30 @@ export class MessageElement extends LitElement {
         display: inline;
       }
 
+      .emote-stack {
+        display: inline-block;
+        position: relative;
+        vertical-align: middle;
+        line-height: 0;
+        margin-bottom: -7px;
+      }
+
+      .emote-stack .emote-base {
+        display: block;
+        margin-bottom: 0;
+      }
+
+      .emote-stack .emote-overlay {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        pointer-events: none;
+        margin-bottom: 0;
+      }
+
       .badges {
         display: inline;
       }
@@ -160,6 +184,16 @@ function renderFragment(fragment: Fragment) {
     }
 
     case "image": {
+      const overlays = fragment.overlayImages;
+      if (overlays?.length) {
+        return html`<span class="emote-stack">
+          <img src="${fragment.image}" alt="${fragment.text}" class="emote emote-base" />
+          ${overlays.map(
+            (src) => html`<img src="${src}" alt="" class="emote emote-overlay" aria-hidden="true" />`,
+          )}
+        </span>`;
+      }
+
       return html`<img src="${fragment.image}" alt="${fragment.text}" class="emote" />`;
     }
   }
