@@ -3,7 +3,31 @@ import { isEmoteOnly } from "./url";
 export type Emote = {
   id: string;
   url: string;
+  /** 7TV only: emote has zero-width flag (overlays previous emote). */
+  zeroWidth?: boolean;
 };
+
+/** 7TV `Emote.flags` — overlay on previous emote when set. */
+export const SEVENTV_EMOTE_FLAG_ZERO_WIDTH = 1 << 8;
+
+function normalizeEmoteFlags(value: unknown): number {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === "string" && value.length > 0) {
+    const n = Number.parseInt(value, 10);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  return 0;
+}
+
+function isSeventvZeroWidth(emote: Pick<SeventvEmote, "flags" | "data">) {
+  const flags =
+    normalizeEmoteFlags(emote.flags) | normalizeEmoteFlags(emote.data?.flags);
+  return (flags & SEVENTV_EMOTE_FLAG_ZERO_WIDTH) !== 0;
+}
 
 export class ExternalStore<ExternalResponse, InternalModel> {
   private store: Record<string, InternalModel> = {};
@@ -66,7 +90,9 @@ const bttvUser = new ExternalStore<{ channelEmotes: readonly BttvEmote[]; shared
 export type SeventvEmote = {
   id: string;
   name: string;
+  flags?: number;
   data: {
+    flags?: number;
     host: {
       url: string;
       files: readonly {
@@ -110,7 +136,11 @@ const seventvGlobal = new ExternalStore<{ emotes: readonly SeventvEmote[] }, Emo
   () => "https://7tv.io/v3/emote-sets/global",
   (body) =>
     body?.emotes?.reduce((acc, cur) => {
-      acc[cur.name] = { id: cur.id, url: resolveRelevant7tvURL(cur.data.host) };
+      acc[cur.name] = {
+        id: cur.id,
+        url: resolveRelevant7tvURL(cur.data.host),
+        zeroWidth: isSeventvZeroWidth(cur),
+      };
       return acc;
     }, {} as Record<string, Emote>),
 );
@@ -126,7 +156,11 @@ export const seventvUser = new ExternalStore<
     seventvUserEmoteSetID = body?.emote_set?.id;
     return (
       body?.emote_set?.emotes?.reduce((acc, cur) => {
-        acc[cur.name] = { id: cur.id, url: resolveRelevant7tvURL(cur.data.host) };
+        acc[cur.name] = {
+          id: cur.id,
+          url: resolveRelevant7tvURL(cur.data.host),
+          zeroWidth: isSeventvZeroWidth(cur),
+        };
         return acc;
       }, {} as Record<string, Emote>) ?? {}
     );
@@ -230,15 +264,17 @@ export function lookupBadge(id: string, version: string) {
   return null;
 }
 
+/** Channel user sets first, then globals — provider order: 7TV, BTTV, FFZ. */
 export function lookupEmote(code: string) {
-  if (bttvUser.get(code)) return bttvUser.get(code);
-  if (ffzUser.get(code)) return ffzUser.get(code);
-  if (seventvUser.get(code)) return seventvUser.get(code);
-  if (bttvGlobal.get(code)) return bttvGlobal.get(code);
-  if (ffzGlobal.get(code)) return ffzGlobal.get(code);
-  if (seventvGlobal.get(code)) return seventvGlobal.get(code);
-
-  return null;
+  return (
+    seventvUser.get(code) ??
+    bttvUser.get(code) ??
+    ffzUser.get(code) ??
+    seventvGlobal.get(code) ??
+    bttvGlobal.get(code) ??
+    ffzGlobal.get(code) ??
+    null
+  );
 }
 
 export function loadData(channelID: string) {

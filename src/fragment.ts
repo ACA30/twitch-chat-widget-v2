@@ -11,9 +11,58 @@ export type TextFragment = BaseFragment & {
 export type ImageFragment = BaseFragment & {
   type: "image";
   image: string;
+  /** Stacked 7TV zero-width emote URLs (paint order: each layer above the previous). */
+  overlayImages?: string[];
 };
 
 export type Fragment = TextFragment | ImageFragment;
+
+function peelTrailingWhitespaceFragments(fragments: Fragment[]) {
+  while (fragments.length > 0) {
+    const last = fragments[fragments.length - 1];
+    if (last.type !== "text") {
+      break;
+    }
+
+    if (last.text.length === 0) {
+      fragments.pop();
+      continue;
+    }
+
+    if (/^\s+$/.test(last.text)) {
+      fragments.pop();
+      continue;
+    }
+
+    const trimmed = last.text.replace(/\s+$/, "");
+    if (trimmed.length === 0) {
+      fragments.pop();
+      continue;
+    }
+
+    if (trimmed !== last.text) {
+      last.text = trimmed;
+    }
+    break;
+  }
+}
+
+/** Attach a 7TV zero-width emote URL to the previous image fragment if present (after stripping whitespace-only tail). */
+function tryMergeZeroWidthOverlay(fragments: Fragment[], overlayUrl: string, overlayName: string): boolean {
+  peelTrailingWhitespaceFragments(fragments);
+  const last = fragments[fragments.length - 1];
+  if (!last || last.type !== "image") {
+    return false;
+  }
+
+  if (!last.overlayImages) {
+    last.overlayImages = [];
+  }
+
+  last.overlayImages.push(overlayUrl);
+  last.text = `${last.text}+${overlayName}`;
+  return true;
+}
 
 // FragmentGenerationFactory is responsible for taking a message string and breaking it down into renderable fragments
 export class FragmentGenerationFactory {
@@ -29,6 +78,11 @@ export class FragmentGenerationFactory {
       const thirdPartyEmote = lookupEmote(word);
       if (thirdPartyEmote) {
         _flushBuffer();
+        if (thirdPartyEmote.zeroWidth && tryMergeZeroWidthOverlay(fragments, thirdPartyEmote.url, word)) {
+          word = "";
+          return;
+        }
+
         fragments.push({ type: "image", text: word, image: thirdPartyEmote.url });
         word = "";
         return;

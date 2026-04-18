@@ -1,4 +1,9 @@
-import { resolveRelevant7tvURL, seventvUser, type SeventvEmote } from "./external-data";
+import {
+  resolveRelevant7tvURL,
+  SEVENTV_EMOTE_FLAG_ZERO_WIDTH,
+  seventvUser,
+  type SeventvEmote,
+} from "./external-data";
 
 type SeventvDispatchBody = {
   pushed?: readonly PushedItem[];
@@ -70,9 +75,11 @@ export class SeventvEventSource {
         continue;
       }
 
+      const flags = (item.value.flags ?? 0) | (item.value.data?.flags ?? 0);
       seventvUser.set(item.value.name, {
         id: item.value.id,
         url: resolveRelevant7tvURL(item.value.data.host),
+        zeroWidth: (flags & SEVENTV_EMOTE_FLAG_ZERO_WIDTH) !== 0,
       });
     }
 
