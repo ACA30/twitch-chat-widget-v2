@@ -59,6 +59,14 @@ export const hideBots = (() => {
 /** When true, subscribe to 7TV emote-set SSE for live emote add/remove updates (extra connection + traffic). */
 export const seventvLiveUpdates = resolveSeventvLiveUpdates();
 
+/** When false, mod/broadcaster message gradient highlights and role icons are hidden. Defaults to true. */
+export const highlightMods = (() => {
+  const raw = params.get("highlight_mods");
+  if (raw === null) return true;
+  const v = raw.toLowerCase();
+  return !(v === "0" || v === "false" || v === "off" || v === "no");
+})();
+
 /** When false, broadcaster/moderator chat commands (!reloadchat, !reloadws, etc.) are disabled. Defaults to true. */
 export const chatCommands = (() => {
   const raw = params.get("commands");

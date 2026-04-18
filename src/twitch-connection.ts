@@ -221,6 +221,8 @@ export function buildMessage(data: IRCMessage) {
       displayName: data.tags["display-name"] || "",
       color: data.tags.color,
       badges: parseBadges(data?.tags?.badges || ""),
+      mod: data.tags["mod"] === "1",
+      broadcaster: parseBadges(data?.tags?.badges || "").some((b) => b.id === "broadcaster"),
     },
   };
 }
