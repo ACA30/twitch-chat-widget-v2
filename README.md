@@ -24,6 +24,7 @@ https://twitch-chat-widget.nateb.ca/115356177-aca30doesgames
 |-----------|--------|---------|-------------|
 | `theme` | `default`, `simple`, `emote_dark` | `default` | Visual theme |
 | `fadeout` | seconds, `off` | `15` | Seconds before messages fade out (`off` disables) |
+| `bots` | `0` | show | Set to `0` to hide messages from users with the Twitch bot badge |
 | `seventv_live` | `1` | off | Subscribe to live 7TV emote-set updates via SSE |
 | `seventv_paints` | `1` | off | Fetch and render 7TV namepaints on chatter names |
 

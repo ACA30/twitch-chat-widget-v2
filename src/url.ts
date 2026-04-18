@@ -48,6 +48,14 @@ export function isEmoteOnly() {
 /** When true, fetch and display 7TV namepaints for chatters (one REST + one GQL call per unique chatter, cached). */
 export const seventvPaints = resolveBoolParam("seventv_paints");
 
+/** When true, messages from users with the Twitch bot badge (bot-badge/1) are hidden. */
+export const hideBots = (() => {
+  const raw = params.get("bots");
+  if (raw === null) return false;
+  const v = raw.toLowerCase();
+  return v === "0" || v === "false" || v === "off" || v === "no";
+})();
+
 /** When true, subscribe to 7TV emote-set SSE for live emote add/remove updates (extra connection + traffic). */
 export const seventvLiveUpdates = resolveSeventvLiveUpdates();
 function resolveBoolParam(...keys: string[]) {

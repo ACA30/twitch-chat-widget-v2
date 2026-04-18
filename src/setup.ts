@@ -13,6 +13,7 @@ export class SetupElement extends LitElement {
   @state() private fadeoutSeconds = "15";
   @state() private seventvLive = false;
   @state() private seventvPaints = false;
+  @state() private hideBots = false;
   @state() private fetchStatus: FetchStatus = "idle";
   @state() private fetchError = "";
   @state() private copied = false;
@@ -377,6 +378,7 @@ export class SetupElement extends LitElement {
 
     if (this.seventvLive) params.set("seventv_live", "1");
     if (this.seventvPaints) params.set("seventv_paints", "1");
+    if (this.hideBots) params.set("bots", "0");
 
     const qs = params.toString();
     return qs ? `${base}?${qs}` : base;
@@ -567,6 +569,24 @@ export class SetupElement extends LitElement {
                   />
                 </div>`
               : ""}
+          </div>
+
+          <div class="field">
+            <label>Hide bots</label>
+            <div class="toggle-row">
+              <label class="toggle">
+                <input
+                  type="checkbox"
+                  .checked=${this.hideBots}
+                  @change=${(e: Event) => {
+                    this.hideBots = (e.target as HTMLInputElement).checked;
+                  }}
+                />
+                <span class="slider"></span>
+              </label>
+              <span>${this.hideBots ? "Enabled" : "Disabled"}</span>
+            </div>
+            <p class="hint-text">Suppresses messages from users with the Twitch bot badge (<code>bot-badge/1</code>).</p>
           </div>
 
           <div class="field">
